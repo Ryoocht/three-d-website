@@ -41,9 +41,28 @@ const Customizer = () => {
           />
         );
       case "aipicker":
-        return <AIPicker />;
+        return (
+          <AIPicker
+            prompt={prompt}
+            setPrompt={setPrompt}
+            generatingImg={generatingImg}
+            handleSubmit={handleSubmit}
+          />
+        );
       default:
         return null;
+    }
+  };
+
+  const handleSubmit = (type: "logo" | "full") => {
+    if (!prompt) return alert("Please enter a prompt");
+    try {
+      // call out backend to generate an ai image!
+    } catch (error) {
+      alert(error);
+    } finally {
+      setGeneratingImg(false);
+      setActiveEditorTab("");
     }
   };
 
@@ -70,6 +89,14 @@ const Customizer = () => {
         state.isLogoTexture = true;
         state.isFullTexture = false;
     }
+
+    // after setting the state, activeFilterTab is updated
+    setActiveFilterTab((prevState) => {
+      return {
+        ...prevState,
+        [tabName]: !prevState[tabName as "logoShirt" | "stylishShirt"],
+      };
+    });
   };
 
   const readFile = (type: "logo" | "full") => {
@@ -121,8 +148,10 @@ const Customizer = () => {
                 key={tab.name}
                 tab={tab}
                 isFilterTab
-                isActiveTab=""
-                handleClick={() => {}}
+                isActiveTab={
+                  activeFilterTab[tab.name as "logoShirt" | "stylishShirt"]
+                }
+                handleClick={() => handleActiveFilterTab(tab.name)}
               />
             ))}
           </motion.div>
