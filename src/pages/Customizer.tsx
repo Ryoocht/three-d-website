@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 
 import config from "../config/config";
 import state from "../store/index";
@@ -18,6 +18,67 @@ import {
 
 const Customizer = () => {
   const snap = useSnapshot(state);
+  const [file, setFile] = useState<File>();
+  const [prompt, setPrompt] = useState("");
+  const [generatingImg, setGeneratingImg] = useState(false);
+  const [activeEditorTab, setActiveEditorTab] = useState("");
+  const [activeFilterTab, setActiveFilterTab] = useState({
+    logoShirt: true,
+    stylishShirt: false,
+  });
+
+  // show tab content depending on the activeTab
+  const generateTabContent = () => {
+    switch (activeEditorTab) {
+      case "colorpicker":
+        return <ColorPicker />;
+      case "filepicker":
+        return (
+          <FilePicker
+            file={file}
+            setFile={(file) => setFile(file)}
+            readFile={readFile}
+          />
+        );
+      case "aipicker":
+        return <AIPicker />;
+      default:
+        return null;
+    }
+  };
+
+  const handleDecals = (
+    type: "logo" | "full",
+    result: "logoDecal" | "fullDecal"
+  ) => {
+    const decalType = DecalTypes[type];
+    state[decalType.stateProperty as "logoDecal" | "fullDecal"] = result;
+    if (!activeFilterTab[decalType.filterTab as "logoShirt" | "stylishShirt"]) {
+      handleActiveFilterTab(decalType.filterTab);
+    }
+  };
+
+  const handleActiveFilterTab = (tabName: string) => {
+    switch (tabName) {
+      case "logoShirt":
+        state.isLogoTexture = !activeFilterTab[tabName];
+        break;
+      case "stylishShirt":
+        state.isFullTexture = !activeFilterTab[tabName];
+        break;
+      default:
+        state.isLogoTexture = true;
+        state.isFullTexture = false;
+    }
+  };
+
+  const readFile = (type: "logo" | "full") => {
+    reader(file).then((result) => {
+      handleDecals(type, result as "logoDecal" | "fullDecal");
+      setActiveEditorTab("");
+    });
+  };
+
   return (
     <AnimatePresence>
       {!snap.intro && (
@@ -30,8 +91,13 @@ const Customizer = () => {
             <div className="flex items-center min-h-screen">
               <div className="editortabs-container tabs">
                 {EditorTabs.map((tab) => (
-                  <Tab key={tab.name} tab={tab} handleClick={() => {}} />
+                  <Tab
+                    key={tab.name}
+                    tab={tab}
+                    handleClick={() => setActiveEditorTab(tab.name)}
+                  />
                 ))}
+                {generateTabContent()}
               </div>
             </div>
           </motion.div>
